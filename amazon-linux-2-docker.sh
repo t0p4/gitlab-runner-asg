@@ -13,7 +13,7 @@ function logit() {
 }                     
 
 logit "Preflight checks for required endpoints..."
-urlportpairlist="$(echo $GITLABRunnerInstanceURL | cut -d'/' -f3 | cut -d':' -f1)=443 gitlab-runner-downloads.s3.amazonaws.com=443"
+urlportpairlist="$(echo $GITLABRunnerInstanceURL | cut -d'/' -f3 | cut -d':' -f1)=80 gitlab-runner-downloads.s3.amazonaws.com=443"
 failurecount=0
 for urlportpair in $urlportpairlist; do
   set -- $(echo $urlportpair | tr '=' ' ') ; url=$1 ; port=$2
