@@ -231,7 +231,7 @@ Resources:
         1OSPatchScope: NoPatching
         3GITLABRunnerInstanceURL: !Ref 3GITLABRunnerInstanceURL
         3GITLABRunnerRegTokenList: !Ref 3GITLABRunnerRegTokenList
-        3INSTConfigurationScript: https://gitlab.com/guided-explorations/aws/gitlab-runner-autoscaling-aws-asg/-/raw/v1.4.8-alpha13/runner_configs/amazon-linux-2-docker.sh
+        3INSTConfigurationScript: https://raw.githubusercontent.com/t0p4/gitlab-runner-asg/main/amazon-linux-2-docker.sh
         3GITLABRunnerTagList: !Ref 3GITLABRunnerTagList
         5ASGSelfMonitorTerminationInterval: 1 #Should always be the lowest possible value for spot
         4ASGDesiredCapacity: 2
