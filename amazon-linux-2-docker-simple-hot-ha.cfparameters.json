@@ -22,16 +22,12 @@
   },
   {
     "ParameterKey": "4ASGDesiredCapacity",
-    "ParameterValue": "2"
+    "ParameterValue": "1"
   },
   {
     "ParameterKey": "5ASGAutoScalingEnabled",
     "ParameterValue": "false"
   }, 
-  {
-    "ParameterKey": "5SPOTOnDemandPercentageAboveBaseCapacity",
-    "ParameterValue": "100"
-  },
   {
     "ParameterKey": "3GITLABRunnerTagList",
     "ParameterValue": ""
@@ -51,6 +47,42 @@
   {
     "ParameterKey": "5ASGInstanceType4",
     "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "5ASGAutoScalingEnabled",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "5ASGAutoScalingMaxSize",
+    "ParameterValue": "10"
+  },
+  {
+    "ParameterKey": "5ASGAutoScalingMetricTypeToMonitor",
+    "ParameterValue": "CPU"
+  },
+  {
+    "ParameterKey": "5ASGAutoScalingSetScaleOutUtilizationThreshold",
+    "ParameterValue": "70"
+  },
+  {
+    "ParameterKey": "5ASGAutoScalingSetScaleOutUtilizationThresholdSeconds",
+    "ParameterValue": "60"
+  },
+  {
+    "ParameterKey": "5ASGAutoScalingSetScaleInUtilizationThreshold",
+    "ParameterValue": "40"
+  },
+  {
+    "ParameterKey": "5ASGAutoScalingSetScaleInUtilizationThresholdSeconds",
+    "ParameterValue": "60"
+  },
+  {
+    "ParameterKey": "5SPOTOnDemandBaseCapacity",
+    "ParameterValue": "0"
+  },
+  {
+    "ParameterKey": "5SPOTOnDemandPercentageAboveBaseCapacity",
+    "ParameterValue": "0"
   },
   {
     "ParameterKey": "8DBGKeypairName",
