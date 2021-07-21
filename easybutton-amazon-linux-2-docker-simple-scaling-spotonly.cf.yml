@@ -1,0 +1,252 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  Amazon Linux 2 Docker Simple Scaling Spot Instances. 
+  Two docker executors, scaling based on simple CPU metrics, only spot
+  **Note:** Actual scaling parameters used in this MVP are just to show how to configure scaling - 
+  they are untested with Runner workloads - your can help by contributing your tested scaling parameters in an issue.
+Metadata: 
+  AWS::CloudFormation::Interface: 
+    ParameterGroups: 
+      - 
+        Label: 
+          default: "Template Information"
+        Parameters: 
+          - 1AAASourceProject
+          - 1AAAATemplateVersion
+      - 
+        Label: 
+          default: "Runner Base Platform"
+        Parameters: 
+          - 1OSInstanceOSPlatform
+          - 1OSInstanceLinuxArch
+          - 1OSPeggedAMIID
+          - 9AWSRetrieveLatestAWSOSAmiIdFromSSM
+      - 
+        Label: 
+          default: "GitLab Instance Registration Details"
+        Parameters: 
+          - 3GITLABRunnerInstanceURL
+          - 3GITLABRunnerRegTokenList
+      - 
+        Label: 
+          default: "GitLab Runner Configuration Details"
+        Parameters: 
+          - 3GITLABRunnerVersion
+          - 3GITLABRunnerTagList
+          - 3INSTConfigurationScript
+          - 3GITLABRunnerS3CacheBucket
+      - 
+        Label: 
+          default: "Scaling Group / Cluster Size, HA Type, Instance Type, VPC Location, Security and Scheduling"
+        Parameters: 
+          - 4ASGDesiredCapacity
+          - 3GITLABRunnerConcurrentJobs
+          - 3INSTConfigurationScript
+          - 3GITLABRunnerS3CacheBucket
+          - 9AWSSpecifiedIAMRoleNAME
+          - 4ASGSpecifyVPC
+          - 4ASGScheduledShutdownCron
+          - 4ASGScheduledStartupDesiredInstances
+          - 4ASGScheduledStartupCron
+          - 5ASGInstanceType1
+          - 5ASGInstanceType2
+          - 5ASGInstanceType3
+          - 5ASGInstanceType4
+          - 8DBGKeypairName
+      - 
+        Label: 
+          default: "Scaling Group / Cluster Optional AutoScaling Parameters"
+        Parameters: 
+          - 5ASGAutoScalingEnabled
+          - 5ASGAutoScalingMaxSize
+          - 5ASGAutoScalingMetricTypeToMonitor
+          - 5ASGAutoScalingSetScaleInUtilizationThreshold
+          - 5ASGAutoScalingSetScaleInUtilizationThresholdSeconds
+          - 5ASGAutoScalingSetScaleOutUtilizationThreshold
+          - 5ASGAutoScalingSetScaleOutUtilizationThresholdSeconds
+          - 5ASGSelfMonitorTerminationInterval
+      - 
+        Label: 
+          default: "Scaling Group / Cluster Optional Spot Configuration"
+        Parameters: 
+          - 5SPOTOnDemandBaseCapacity
+          - 5SPOTOnDemandPercentageAboveBaseCapacity
+          - 5SPOTSpotAllocationStrategy
+      - 
+        Label: 
+          default: "Maintenance Built-In"
+        Parameters: 
+          - 1OSLastManagedUpdate
+          - 1OSPatchScope
+          - 4ASGUpdateType
+    ParameterLabels: 
+      1AAASourceProject: 
+        default: "Location of the source for this project."
+      1AAAATemplateVersion: 
+        default: "Version of this template."
+      1OSPeggedAMIID:
+        default: "Peg the AMI ID to a specific one or use the latest AWS prepared AMI?"
+      1OSInstanceOSPlatform:
+        default: "OS Platform for Runner"
+      1OSInstanceLinuxArch:
+        default: "Hardware architecture if OS Platform is Linux."
+      1OSLastManagedUpdate:
+        default: "Last time an update was forced using a CloudFormation update."
+      1OSPatchScope:
+        default: "What kind of patches should be installed?"
+      3INSTConfigurationScript:
+        default: "Pointer to script used to configure the runner on the instance."
+      3GITLABRunnerS3CacheBucket:
+        default: "S3 bucket that holds shared cache for all runner instances in this runner Scaling Group / Cluster."
+      4ASGUpdateType:
+        default: "What kind of update type should the Scaling Group / Cluster use when updating?"
+      3GITLABRunnerConcurrentJobs:
+        default: "Number of concurrent jobs / containers that can run on a single runner instance at one time."
+      3GITLABRunnerInstanceURL:
+        default: "GitLab Instance URL."
+      3GITLABRunnerRegTokenList:
+        default: "One or more runner Registration tokens from the target instance."
+      3GITLABRunnerS3CacheBucket:
+        default: "The S3 bucket that will be used for a shared runner cache."
+      3GITLABRunnerTagList:
+        default: "An optional list of additional tags for the GitLab Runner."
+      3GITLABRunnerVersion:
+        default: "Version of the GitLab runner.  Generally should match your GitLab instance."
+      9AWSRetrieveLatestAWSOSAmiIdFromSSM:
+        default: "The SSM Parameter used to lookup the latest Amazon AMI when not pegging one. The SSM parameter must point to an AMI that contains the proper OS indicated in 'OS Platform for Runner'"
+      4ASGDesiredCapacity:
+        default: "The number of instances that should be configured. Generally 1 for warm HA and 2 for hot HA."
+      4ASGUpdateType:
+        default: "The type of deployment strategy should be used when updating the Scaling Group / Cluster."
+      4ASGScheduledShutdownCron:
+        default: "Optional cron schedule for complete runner Scaling Group / Cluster shutdown."
+      4ASGScheduledStartupCron:
+        default: "Optional cron schedule for complete runner Scaling Group / Cluster startup."
+      4ASGScheduledStartupDesiredInstances:
+        default: "Number of instances to start for startup schedule."
+      4ASGSpecifyVPC:
+        default: "The VPC in the account and region should be used."
+      5ASGAutoScalingEnabled:
+        default: "Whether to AutoScale the Scaling Group."
+      5ASGAutoScalingMaxSize:
+        default: "Maximum instances in the Scaling Group."
+      5ASGSelfMonitorTerminationInterval:
+        default: "Frequency in minutes for instances to poll to see whether they are being terminated."
+      5ASGAutoScalingMetricTypeToMonitor:
+        default: "What metric should be monitored for autoscaling."
+      5ASGAutoScalingSetScaleOutUtilizationThreshold:
+        default: "Scale out threshold (percent)."
+      5ASGAutoScalingSetScaleOutUtilizationThresholdSeconds:
+        default: "How long the scale out threshold should be experienced before triggering scale out."
+      5ASGAutoScalingSetScaleInUtilizationThreshold:
+        default: "Scale in threshold (percent)."
+      5ASGAutoScalingSetScaleInUtilizationThresholdSeconds:
+        default: "How long the scale in threshold should be experienced before triggering scale out."
+      5ASGInstanceType1:
+        default: "Primary instance type to be used - if available."
+      5ASGInstanceType2:
+        default: "Second priority instance type to be used - if previous priorities are exhausted. Used for Ec2 Fleet when not using spot."
+      5ASGInstanceType3:
+        default: "Third priority instance type to be used - if previous priorities are exhausted. Used for Ec2 Fleet when not using spot."
+      5ASGInstanceType4:
+        default: "Fourth priority instance type to be used - if previous priorities are exhausted. Used for Ec2 Fleet when not using spot."
+      5SPOTSpotAllocationStrategy:
+        default: "Focus spot request strategy on price or lower terminations."  
+      5SPOTOnDemandBaseCapacity:
+        default: "OnDemandBaseCapacity - Number of non-spot instances to always start with."
+      5SPOTOnDemandPercentageAboveBaseCapacity:
+        default: "Percentage of non-spot instances when scaling above OnDemandBaseCapacity."
+      8DBGKeypairName:
+        default: "Optional keypair name for traditional SSH access to Runner instances."
+      9AWSSpecifiedIAMRoleNAME:
+        default: "Override automatic IAM Instance Profile for a precreated one."
+      9AWSRetrieveLatestAWSOSAmiIdFromSSM:
+        default: "Which Amazon Prepared AMI to grab the latest of (SSM parameter path)."
+Parameters:
+  3GITLABRunnerInstanceURL:
+    Description: >
+      The url of the instance that the runner will register (must be reachable from runner instance on port 443 with return conversations).
+    Type: String
+    Default: https://gitlab.com/
+  3GITLABRunnerRegTokenList:
+    Description: One or more runner tokens to register (semicolon delimited)
+    Type: String
+    NoEcho: true
+    AllowedPattern: .+
+  3GITLABRunnerTagList:
+    Description: >
+      Optional tags to identify the runner (comma delimited) in GitLab and AWS Instance tags to identify things like what team or person the runner is for.
+      The runner will automatically have tags for the operating system platform, whether compute is spot or ondemand and the executor type.
+      Ec2 tags will also include the runner name and the gitlab instance url. Except for Linux Docker, other runner types will require tags to be specified in jobs.
+    Type: String
+  4ASGSpecifyVPC:
+    Description: >
+      DefaultVPC - finds the VPC and configures all of its subnets for you. Otherwise type in the VPC id of a VPC in the same region where you run the template. 
+      All subnets and azs of the chosen vpc will be used.
+      The VPC and chosen subnets must be setup in a way that allows the runner instances to resolve the DNS name and connect
+      to port 443 on the GitLab instance URL you provide.
+    Type: String
+    Default: DefaultVPC
+  5ASGInstanceType1:
+    Description: >
+      Specify the instance type to be used.  Do not use bursty instance types like t2 or t3. 
+      Four types required for spot configuration to avoid rebalancing churn.
+    Type: String
+    Default: "m5.large"
+    AllowedPattern: ^[A-Za-z0-9.]+$
+  5ASGInstanceType2:
+    Description: >
+      Specify the instance type to be used.  Do not use bursty instance types like t2 or t3. 
+      Four types required for spot configuration to avoid rebalancing churn.
+    Type: String
+    Default: "m5d.large"
+    AllowedPattern: ^[A-Za-z0-9.]+$
+  5ASGInstanceType3:
+    Description: >
+      Specify the instance type to be used.  Do not use bursty instance types like t2 or t3. 
+      Four types required for spot configuration to avoid rebalancing churn.
+    Type: String
+    Default: "m5n.large"
+    AllowedPattern: ^[A-Za-z0-9.]+$
+  5ASGInstanceType4:
+    Description: >
+      Specify the instance type to be used.  Do not use bursty instance types like t2 or t3. 
+      Four types required for spot configuration to avoid rebalancing churn.
+    Type: String
+    Default: "c5.large"
+    AllowedPattern: ^[A-Za-z0-9.]+$
+Resources:
+  RnrASG:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://gl-public-templates.s3.amazonaws.com/cfn/v1.4.8-alpha13/GitLabElasticScalingRunner.cf.yml
+      Tags:
+        - Key: Product
+          Value: GitLab
+        - Key: Function
+          Value: GitLabRunner
+      Parameters:
+        1OSPeggedAMIID: AlwaysUseLatest
+        1OSInstanceOSPlatform: Linux
+        1OSPatchScope: NoPatching
+        3GITLABRunnerInstanceURL: !Ref 3GITLABRunnerInstanceURL
+        3GITLABRunnerRegTokenList: !Ref 3GITLABRunnerRegTokenList
+        3INSTConfigurationScript: https://gitlab.com/guided-explorations/aws/gitlab-runner-autoscaling-aws-asg/-/raw/v1.4.8-alpha13/runner_configs/amazon-linux-2-docker.sh
+        3GITLABRunnerTagList: !Ref 3GITLABRunnerTagList
+        5ASGSelfMonitorTerminationInterval: 1 #Should always be the lowest possible value for spot
+        4ASGDesiredCapacity: 2
+        4ASGSpecifyVPC: !Ref 4ASGSpecifyVPC
+        5ASGAutoScalingEnabled: true
+        5ASGAutoScalingMetricTypeToMonitor: CPU
+        5ASGAutoScalingSetScaleOutUtilizationThreshold: 70
+        5ASGAutoScalingSetScaleOutUtilizationThresholdSeconds: 60
+        5ASGAutoScalingSetScaleInUtilizationThreshold: 40
+        5ASGAutoScalingSetScaleInUtilizationThresholdSeconds: 60
+        5SPOTOnDemandBaseCapacity: 0
+        5SPOTOnDemandPercentageAboveBaseCapacity: 0
+        5ASGInstanceType1: !Ref 5ASGInstanceType1
+        5ASGInstanceType2: !Ref 5ASGInstanceType2
+        5ASGInstanceType3: !Ref 5ASGInstanceType3
+        5ASGInstanceType4: !Ref 5ASGInstanceType4
+        8DBGKeypairName: ""
+        9AWSRetrieveLatestAWSOSAmiIdFromSSM: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
